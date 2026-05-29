@@ -47,7 +47,7 @@
             font-weight: bold;
         }
 
-        /* 菜品展示区 (二级菜单) */
+        /* 菜品展示区 */
         .food-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -105,89 +105,69 @@
             transform: scale(0.98);
         }
 
-        /* 弹窗详情页 */
+        /* 普通详情弹窗 */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100;
         }
         .modal-overlay.show { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: var(--card-bg);
-            width: 85%;
-            max-width: 320px;
-            border-radius: var(--radius);
-            padding: 24px;
-            position: relative;
-            transform: translateY(20px);
-            transition: transform 0.3s;
+            background: var(--card-bg); width: 85%; max-width: 320px; border-radius: var(--radius);
+            padding: 24px; position: relative; transform: translateY(20px); transition: transform 0.3s;
         }
         .modal-overlay.show .modal-content { transform: translateY(0); }
-        .close-btn {
-            position: absolute;
-            top: 12px; right: 16px;
-            font-size: 24px;
-            color: var(--text-sub);
-            cursor: pointer;
-        }
+        .close-btn { position: absolute; top: 12px; right: 16px; font-size: 24px; color: var(--text-sub); cursor: pointer; }
         .detail-name { font-size: 22px; font-weight: bold; margin-bottom: 12px; margin-top: 10px; }
         .detail-item { font-size: 15px; margin-bottom: 8px; color: var(--text-sub); display: flex;}
         .detail-item strong { color: var(--text-main); width: 50px; flex-shrink: 0;}
 
-        /* ✨ 新增：老虎机滚轮弹窗动画与样式 */
+        /* 老虎机滚轮样式 */
         .slot-machine-box {
-            background: var(--card-bg);
-            width: 260px;
-            height: 180px; /* 显示3个元素，每个60px高度 */
-            border-radius: var(--radius);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 0 20px rgba(0,0,0,0.05);
-            transform: scale(0.8);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--card-bg); width: 260px; height: 180px; border-radius: var(--radius);
+            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .modal-overlay.show .slot-machine-box {
-            transform: scale(1);
-        }
-        /* 内部滚动容器 */
-        .slot-window {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            transform: translateY(0);
-        }
-        /* 单个菜单项 */
-        .slot-item {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--text-main);
-            flex-shrink: 0;
-        }
-        /* 上下遮罩渐变：营造圆柱滚轮的视觉深度 */
-        .slot-mask-top, .slot-mask-bottom {
-            position: absolute; left: 0; width: 100%; height: 60px; z-index: 2; pointer-events: none;
-        }
+        .modal-overlay.show .slot-machine-box { transform: scale(1); }
+        .slot-window { display: flex; flex-direction: column; width: 100%; transform: translateY(0); }
+        .slot-item { height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+        .slot-mask-top, .slot-mask-bottom { position: absolute; left: 0; width: 100%; height: 60px; z-index: 2; pointer-events: none; }
         .slot-mask-top { top: 0; background: linear-gradient(to bottom, rgba(255,255,255,1) 10%, rgba(255,255,255,0)); }
         .slot-mask-bottom { bottom: 0; background: linear-gradient(to top, rgba(255,255,255,1) 10%, rgba(255,255,255,0)); }
-        /* 中间的选中框 / 红线 */
         .slot-target-line {
             position: absolute; top: 60px; left: 0; width: 100%; height: 60px;
-            border-top: 2px solid var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
-            box-sizing: border-box;
-            z-index: 3; pointer-events: none;
-            background: rgba(255, 107, 107, 0.05);
+            border-top: 2px solid var(--primary-color); border-bottom: 2px solid var(--primary-color);
+            z-index: 3; pointer-events: none; background: rgba(255, 107, 107, 0.05);
+        }
+
+        /* ✨ 终极抉择弹窗样式 */
+        #finalSelectionModal { z-index: 200; background: rgba(0,0,0,0.85); }
+        #finalSelectionModal .modal-content { max-width: 90%; width: 380px; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .final-title { font-size: 22px; font-weight: bold; margin-bottom: 5px; color: var(--text-main); }
+        .countdown-display { font-size: 16px; color: var(--text-sub); margin-bottom: 15px; }
+        .countdown-text { font-size: 28px; color: var(--primary-color); font-weight: bold; }
+        
+        /* 终极抉择选项卡片 */
+        .final-options-list { display: flex; flex-direction: column; gap: 12px; }
+        .mini-card { 
+            display: flex; text-align: left; background: #fff; border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); cursor: pointer; border: 2px solid transparent; 
+            transition: all 0.2s; overflow: hidden;
+        }
+        .mini-card:active { transform: scale(0.96); }
+        .mini-card:hover { border-color: #ffb8b8; }
+        .mini-card .food-img { width: 90px; height: 90px; border-radius: 0; }
+        .mini-card .food-info { padding: 10px; display: flex; flex-direction: column; justify-content: center; }
+        .mini-card .food-name { font-size: 16px; margin-bottom: 4px; }
+        
+        /* 隐藏彩蛋样式 */
+        .hidden-option-box {
+            padding: 30px 15px; background: #fff4f4; border-radius: var(--radius);
+            border: 2px dashed var(--primary-color); animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { box-shadow: 0 0 10px rgba(255,107,107,0.2); transform: scale(0.98); }
+            to { box-shadow: 0 0 25px rgba(255,107,107,0.6); transform: scale(1.02); }
         }
     </style>
 </head>
@@ -196,26 +176,36 @@
     <div class="nav-bar" id="navBar"></div>
     <div class="food-grid" id="foodGrid"></div>
     <div class="bottom-bar">
-        <button class="btn-random" id="randomBtn" onclick="pickRandom()">🎰 老虎机抽签</button>
+        <button class="btn-random" id="randomBtn" onclick="pickRandom()">🎰 老虎机抽签 (剩余3次)</button>
     </div>
 
     <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <span class="close-btn" onclick="closeModal(event, true)">&times;</span>
+            <div style="font-size: 14px; color: var(--primary-color); font-weight:bold; margin-bottom: 8px;" id="spinResultTitle">第 1 次抽取结果</div>
             <div class="detail-name" id="modalName">菜品名称</div>
             <div class="detail-item"><strong>价格:</strong> <span id="modalPrice"></span></div>
             <div class="detail-item"><strong>门店:</strong> <span id="modalStore"></span></div>
             <div class="detail-item"><strong>位置:</strong> <span id="modalLocation"></span></div>
+            <div style="margin-top: 20px; text-align: center; color: #888; font-size: 13px;">点击空白处关闭继续抽取</div>
         </div>
     </div>
 
     <div class="modal-overlay" id="slotOverlay">
         <div class="slot-machine-box">
             <div class="slot-mask-top"></div>
-            <div class="slot-window" id="slotWindow">
-                </div>
+            <div class="slot-window" id="slotWindow"></div>
             <div class="slot-mask-bottom"></div>
             <div class="slot-target-line"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="finalSelectionModal">
+        <div class="modal-content">
+            <div class="final-title" id="finalTitle">⚔️ 终极对决 ⚔️</div>
+            <div class="countdown-display" id="countdownDisplay">请在 <span class="countdown-text" id="countdownText">8</span> 秒内做出决定</div>
+            
+            <div class="final-options-list" id="finalOptionsContainer"></div>
         </div>
     </div>
 
@@ -274,7 +264,15 @@
         ];
 
         let currentCategory = "全部";
-        let isSpinning = false; // 防止重复点击
+        
+        // ✨ 新增系统状态变量
+        let isSpinning = false; 
+        const maxSpins = 3;       // 最大抽取次数
+        let spinCount = 0;        // 当前已抽取次数
+        let spinResults = [];     // 存放每次抽出的菜品数据
+        
+        let finalTimer = null;    // 倒计时计时器
+        let timeLeft = 8;         // 倒计时秒数
 
         function init() {
             renderNav();
@@ -290,7 +288,7 @@
         }
 
         function changeCategory(cat) {
-            if (isSpinning) return;
+            if (isSpinning || spinCount >= maxSpins) return; // 抽奖中或次数用完禁止切换
             currentCategory = cat;
             renderNav();
             renderFoods();
@@ -309,7 +307,6 @@
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding: 40px;">当前分类暂无菜品</div>';
                 return;
             }
-
             grid.innerHTML = data.map(item => `
                 <div class="food-card" onclick="showModal(${item.id})">
                     <img src="${item.img}" alt="${item.name}" class="food-img" loading="lazy">
@@ -320,9 +317,18 @@
             `).join('');
         }
 
-        function showModal(id) {
+        function showModal(id, titleText = null) {
             const item = dbData.find(d => d.id === id);
             if (!item) return;
+
+            // 显示是第几次抽签
+            const titleEl = document.getElementById('spinResultTitle');
+            if(titleText) {
+                titleEl.innerText = titleText;
+                titleEl.style.display = "block";
+            } else {
+                titleEl.style.display = "none";
+            }
 
             document.getElementById('modalName').innerText = item.name;
             document.getElementById('modalPrice').innerText = item.price;
@@ -335,12 +341,23 @@
         function closeModal(event, force = false) {
             if (force || event.target.id === 'detailModal') {
                 document.getElementById('detailModal').classList.remove('show');
+                
+                // 如果刚好关掉的是第3次抽签的弹窗，立刻触发终极抉择
+                if (spinCount >= maxSpins) {
+                    setTimeout(() => { showFinalSelection(); }, 300);
+                }
             }
         }
 
-        // ✨ 核心老虎机算法
+        // 老虎机算法
         function pickRandom() {
             if (isSpinning) return;
+            if (spinCount >= maxSpins) {
+                alert("你已经抽取3次啦！无法再重抽。");
+                showFinalSelection();
+                return;
+            }
+
             const currentData = getFilteredData();
             if (currentData.length === 0) {
                 alert("当前分类下没有可以随机的菜品哦！");
@@ -355,63 +372,137 @@
             const slotOverlay = document.getElementById('slotOverlay');
             const slotWindow = document.getElementById('slotWindow');
 
-            // --- 构建滚轮里的数据 ---
-            const spinRounds = 4; // 滚轮空转的圈数
-            let rollData = [];
+            const spinRounds = 4;
+            let rollData = [{ name: "等待命运降临..." }];
             
-            // 头部放一个假项，让它初始刚好对准第二格
-            rollData.push({ name: "等待命运降临..." });
-            
-            // 拼接多圈数据来制造滚动长度
             for (let i = 0; i < spinRounds; i++) {
                 rollData = rollData.concat(currentData);
             }
             
-            // 计算这次到底要中哪个
             const winnerIndex = Math.floor(Math.random() * currentData.length);
             const finalWinner = currentData[winnerIndex];
             
-            // 把最后一圈到 winner 为止的数据加上
             for (let i = 0; i <= winnerIndex; i++) {
                 rollData.push(currentData[i]);
             }
-            // 尾部再加一个假项，防止滚动到底部露馅
             rollData.push({ name: "" });
 
-            // 渲染列表到老虎机窗口
             slotWindow.innerHTML = rollData.map(item => `<div class="slot-item">${item.name}</div>`).join('');
-
-            // --- 触发动画 ---
-            // 1. 瞬间回到最顶部，不带动画
             slotWindow.style.transition = 'none';
             slotWindow.style.transform = `translateY(0px)`;
             
-            // 2. 显示老虎机外壳
             slotOverlay.classList.add('show');
+            slotWindow.offsetHeight; // 强制渲染
 
-            // 强制浏览器刷新一次渲染树
-            slotWindow.offsetHeight;
-
-            // 3. 计算最终停留的目标位置
-            // 每个格子高 60px。总索引就是 1(假项) + 基础圈数*数据量 + 中奖索引。
-            // 为了让目标处于中间（第2格位置），需要向上移动 (目标索引 - 1) 个高度
             const targetIndex = 1 + spinRounds * currentData.length + winnerIndex;
             const targetY = - (targetIndex - 1) * 60;
 
-            // 4. 设置动画（使用贝塞尔曲线，模拟转盘减速停下的质感），动画耗时 3 秒
             slotWindow.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
             slotWindow.style.transform = `translateY(${targetY}px)`;
 
-            // 5. 等待动画跑完后收尾
+            // 动画结束
             setTimeout(() => {
                 slotOverlay.classList.remove('show');
-                showModal(finalWinner.id); // 弹出详情卡片
                 
-                // 恢复按钮状态
+                // ✨ 将本次结果保存进数组，并增加计数
+                spinResults.push(finalWinner);
+                spinCount++;
+                
+                // 弹出单次结果
+                showModal(finalWinner.id, `第 ${spinCount} 次抽取结果`);
+                
+                // 恢复按钮并更新剩余次数
                 isSpinning = false;
-                btn.innerText = "🎰 老虎机抽签";
-                btn.disabled = false;
-            }, 3200); // 比 CSS 动画多等 0.2 秒缓冲，让眼睛看清结果
+                if (spinCount < maxSpins) {
+                    btn.innerText = `🎰 老虎机抽签 (剩余${maxSpins - spinCount}次)`;
+                    btn.disabled = false;
+                } else {
+                    btn.innerText = `🛑 次数已用完`;
+                    btn.style.background = "#cccccc";
+                }
+            }, 3200);
+        }
+
+        // ✨ 触发终极抉择阶段
+        function showFinalSelection() {
+            // 如果已经显示了，就不重复执行
+            if(document.getElementById('finalSelectionModal').classList.contains('show')) return;
+            
+            document.getElementById('finalSelectionModal').classList.add('show');
+            
+            const container = document.getElementById('finalOptionsContainer');
+            // 将3次结果渲染成列表
+            container.innerHTML = spinResults.map((item, index) => `
+                <div class="mini-card" onclick="makeFinalChoice(${index})">
+                    <img src="${item.img}" class="food-img">
+                    <div class="food-info">
+                        <div class="food-name">${item.name}</div>
+                        <div style="font-size:12px; color:#888;">${item.store} | ${item.price}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // 初始化倒计时
+            timeLeft = 8;
+            document.getElementById('countdownText').innerText = timeLeft;
+            document.getElementById('finalTitle').innerText = "⚔️ 终极对决 ⚔️";
+            document.getElementById('countdownDisplay').style.display = 'block';
+
+            // 开始8秒计时器
+            finalTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    document.getElementById('countdownText').innerText = timeLeft;
+                } else {
+                    // 超时未选
+                    clearInterval(finalTimer);
+                    unlockHiddenOption();
+                }
+            }, 1000);
+        }
+
+        // ✨ 用户做出了最终选择
+        function makeFinalChoice(index) {
+            if (timeLeft <= 0) return; // 超时就不让点了
+            
+            clearInterval(finalTimer); // 停止倒计时
+            const chosen = spinResults[index];
+            
+            // 更新 UI
+            document.getElementById('finalTitle').innerText = "✅ 最终决定就是它了！";
+            document.getElementById('countdownDisplay').style.display = 'none';
+
+            // 清空列表，只展示那一个大卡片
+            const container = document.getElementById('finalOptionsContainer');
+            container.innerHTML = `
+                <div class="mini-card" style="transform: scale(1.05); margin: 20px auto; border-color: var(--primary-color); cursor: default;">
+                    <img src="${chosen.img}" class="food-img" style="width: 110px; height: 110px;">
+                    <div class="food-info" style="padding: 15px;">
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">${chosen.name}</div>
+                        <div style="font-size: 14px; color: var(--text-sub); margin-bottom: 4px;">${chosen.store} | ${chosen.price}</div>
+                        <div style="font-size: 12px; color: #aaa;">${chosen.location}</div>
+                    </div>
+                </div>
+                <div style="margin-top:20px; color:#888; font-size:14px;">祝你用餐愉快！</div>
+            `;
+        }
+
+        // ✨ 超时触发彩蛋
+        function unlockHiddenOption() {
+            document.getElementById('finalTitle').innerText = "✨ 隐藏选项解锁 ✨";
+            document.getElementById('countdownDisplay').style.display = 'none';
+            
+            const container = document.getElementById('finalOptionsContainer');
+            container.innerHTML = `
+                <div class="hidden-option-box">
+                    <div style="font-size: 55px; margin-bottom: 10px;">🦀</div>
+                    <div style="font-size: 26px; font-weight: bold; color: var(--primary-color); margin-bottom: 10px;">249 海鲜自助</div>
+                    <div style="font-size: 14px; color: #666; line-height:1.5;">
+                        既然给了你3次机会你都犹豫不决...<br>那就不要选了，对自己好一点！
+                    </div>
+                </div>
+                <div style="margin-top:20px; color:#888; font-size:14px;">老板，买单！</div>
+            `;
         }
 
         window.onload = init;
