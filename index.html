@@ -60,7 +60,7 @@
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
         }
         .food-card:active { transform: scale(0.97); }
         .food-img {
@@ -71,15 +71,6 @@
         }
         .food-info { padding: 12px; }
         .food-name { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
-        
-        /* 💡 新增：跑马灯高亮时的样式 */
-        .food-card.highlight {
-            transform: scale(1.05);
-            box-shadow: 0 0 0 4px var(--primary-color), 0 8px 20px rgba(255,107,107,0.4);
-            transition: all 0.1s; /* 跑马灯状态下过渡更快 */
-            position: relative;
-            z-index: 2;
-        }
 
         /* 底部随机按钮 */
         .bottom-bar {
@@ -118,7 +109,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -149,6 +140,55 @@
         .detail-name { font-size: 22px; font-weight: bold; margin-bottom: 12px; margin-top: 10px; }
         .detail-item { font-size: 15px; margin-bottom: 8px; color: var(--text-sub); display: flex;}
         .detail-item strong { color: var(--text-main); width: 50px; flex-shrink: 0;}
+
+        /* ✨ 新增：老虎机滚轮弹窗动画与样式 */
+        .slot-machine-box {
+            background: var(--card-bg);
+            width: 260px;
+            height: 180px; /* 显示3个元素，每个60px高度 */
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 0 20px rgba(0,0,0,0.05);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.show .slot-machine-box {
+            transform: scale(1);
+        }
+        /* 内部滚动容器 */
+        .slot-window {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            transform: translateY(0);
+        }
+        /* 单个菜单项 */
+        .slot-item {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        /* 上下遮罩渐变：营造圆柱滚轮的视觉深度 */
+        .slot-mask-top, .slot-mask-bottom {
+            position: absolute; left: 0; width: 100%; height: 60px; z-index: 2; pointer-events: none;
+        }
+        .slot-mask-top { top: 0; background: linear-gradient(to bottom, rgba(255,255,255,1) 10%, rgba(255,255,255,0)); }
+        .slot-mask-bottom { bottom: 0; background: linear-gradient(to top, rgba(255,255,255,1) 10%, rgba(255,255,255,0)); }
+        /* 中间的选中框 / 红线 */
+        .slot-target-line {
+            position: absolute; top: 60px; left: 0; width: 100%; height: 60px;
+            border-top: 2px solid var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            box-sizing: border-box;
+            z-index: 3; pointer-events: none;
+            background: rgba(255, 107, 107, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -156,7 +196,7 @@
     <div class="nav-bar" id="navBar"></div>
     <div class="food-grid" id="foodGrid"></div>
     <div class="bottom-bar">
-        <button class="btn-random" id="randomBtn" onclick="pickRandom()">🎲 随便来一份</button>
+        <button class="btn-random" id="randomBtn" onclick="pickRandom()">🎰 老虎机抽签</button>
     </div>
 
     <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
@@ -169,10 +209,20 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="slotOverlay">
+        <div class="slot-machine-box">
+            <div class="slot-mask-top"></div>
+            <div class="slot-window" id="slotWindow">
+                </div>
+            <div class="slot-mask-bottom"></div>
+            <div class="slot-target-line"></div>
+        </div>
+    </div>
+
     <script>
         const categories = ["全部", "不要碳水", "米线/粉", "面条", "米饭", "包子饺子"];
         const dbData = [
-             { id: 1, name: "酸菜肉丝面", category: "面条", store: "永济饺子", price: "¥28.00", location: "西侧底商", img: "images/Gemini_Generated_Image_jh62a7jh62a7jh62.png" },
+            { id: 1, name: "酸菜肉丝面", category: "面条", store: "永济饺子", price: "¥28.00", location: "西侧底商", img: "images/Gemini_Generated_Image_jh62a7jh62a7jh62.png" },
             { id: 2, name: "猪肉/牛肉饺子", category: "包子饺子", store: "永济饺子", price: "¥16.00", location: "西侧底商", img: "images/Gemini_Generated_Image_oqivfooqivfooqiv.webp" },
             { id: 3, name: "过油肉盖饭", category: "米饭", store: "永济饺子", price: "¥18.00", location: "西侧底商", img: "images/Gemini_Generated_Image_j5muh9j5muh9j5mu.png" },
             { id: 4, name: "藤椒鸡拌面", category: "面条", store: "永济饺子", price: "¥18.00", location: "西侧底商", img: "images/Gemini_Generated_Image_dm7hxcdm7hxcdm7h.png" },
@@ -224,7 +274,7 @@
         ];
 
         let currentCategory = "全部";
-        let isSpinning = false; // 新增状态标识，防止重复点击
+        let isSpinning = false; // 防止重复点击
 
         function init() {
             renderNav();
@@ -240,7 +290,7 @@
         }
 
         function changeCategory(cat) {
-            if (isSpinning) return; // 抽奖时禁止切换分类
+            if (isSpinning) return;
             currentCategory = cat;
             renderNav();
             renderFoods();
@@ -285,21 +335,12 @@
         function closeModal(event, force = false) {
             if (force || event.target.id === 'detailModal') {
                 document.getElementById('detailModal').classList.remove('show');
-                
-                // 关掉弹窗时，清除所有高亮
-                if(!isSpinning) {
-                    const cards = document.getElementsByClassName('food-card');
-                    for (let i = 0; i < cards.length; i++) {
-                        cards[i].classList.remove('highlight');
-                    }
-                }
             }
         }
 
-        // 💡 核心跑马灯逻辑重写
+        // ✨ 核心老虎机算法
         function pickRandom() {
-            if (isSpinning) return; // 如果正在抽奖，禁止再次点击
-
+            if (isSpinning) return;
             const currentData = getFilteredData();
             if (currentData.length === 0) {
                 alert("当前分类下没有可以随机的菜品哦！");
@@ -307,58 +348,70 @@
             }
 
             isSpinning = true;
-            
-            // 改变按钮状态
             const btn = document.getElementById('randomBtn');
-            btn.innerText = "🌀 正在抽取中...";
+            btn.innerText = "🎰 正在摇号中...";
             btn.disabled = true;
 
-            const cards = document.getElementsByClassName('food-card');
+            const slotOverlay = document.getElementById('slotOverlay');
+            const slotWindow = document.getElementById('slotWindow');
+
+            // --- 构建滚轮里的数据 ---
+            const spinRounds = 4; // 滚轮空转的圈数
+            let rollData = [];
             
-            // 提前内定好这次抽中的菜品索引
-            const winnerIndex = Math.floor(Math.random() * currentData.length);
+            // 头部放一个假项，让它初始刚好对准第二格
+            rollData.push({ name: "等待命运降临..." });
             
-            // 计算总共跳动的步数 (至少转圈30次，最后停在 winnerIndex 上)
-            const rounds = Math.floor(30 / currentData.length) + 1;
-            const totalSteps = rounds * currentData.length + winnerIndex + 1;
-            
-            let currentStep = 0;
-            let delay = 50; // 初始跳动速度，越小越快
-
-            // 递归定时器函数
-            function step() {
-                // 1. 移除所有卡片的高亮
-                for (let i = 0; i < cards.length; i++) {
-                    cards[i].classList.remove('highlight');
-                }
-
-                // 2. 给当前计算出的卡片加上高亮
-                const highlightIndex = currentStep % currentData.length;
-                cards[highlightIndex].classList.add('highlight');
-
-                currentStep++;
-
-                if (currentStep < totalSteps) {
-                    // 当快结束时，逐渐减慢速度 (阻尼效果)
-                    if (currentStep > totalSteps - 10) {
-                        delay += 35; // 步子迈得越快，这里加得越大，减速越明显
-                    }
-                    setTimeout(step, delay);
-                } else {
-                    // 跑马灯结束
-                    setTimeout(() => {
-                        showModal(currentData[winnerIndex].id);
-                        
-                        // 恢复按钮状态
-                        isSpinning = false;
-                        btn.innerText = "🎲 随便来一份";
-                        btn.disabled = false;
-                    }, 400); // 停顿0.4秒后弹出结果
-                }
+            // 拼接多圈数据来制造滚动长度
+            for (let i = 0; i < spinRounds; i++) {
+                rollData = rollData.concat(currentData);
             }
+            
+            // 计算这次到底要中哪个
+            const winnerIndex = Math.floor(Math.random() * currentData.length);
+            const finalWinner = currentData[winnerIndex];
+            
+            // 把最后一圈到 winner 为止的数据加上
+            for (let i = 0; i <= winnerIndex; i++) {
+                rollData.push(currentData[i]);
+            }
+            // 尾部再加一个假项，防止滚动到底部露馅
+            rollData.push({ name: "" });
 
-            // 开始跳动！
-            step();
+            // 渲染列表到老虎机窗口
+            slotWindow.innerHTML = rollData.map(item => `<div class="slot-item">${item.name}</div>`).join('');
+
+            // --- 触发动画 ---
+            // 1. 瞬间回到最顶部，不带动画
+            slotWindow.style.transition = 'none';
+            slotWindow.style.transform = `translateY(0px)`;
+            
+            // 2. 显示老虎机外壳
+            slotOverlay.classList.add('show');
+
+            // 强制浏览器刷新一次渲染树
+            slotWindow.offsetHeight;
+
+            // 3. 计算最终停留的目标位置
+            // 每个格子高 60px。总索引就是 1(假项) + 基础圈数*数据量 + 中奖索引。
+            // 为了让目标处于中间（第2格位置），需要向上移动 (目标索引 - 1) 个高度
+            const targetIndex = 1 + spinRounds * currentData.length + winnerIndex;
+            const targetY = - (targetIndex - 1) * 60;
+
+            // 4. 设置动画（使用贝塞尔曲线，模拟转盘减速停下的质感），动画耗时 3 秒
+            slotWindow.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
+            slotWindow.style.transform = `translateY(${targetY}px)`;
+
+            // 5. 等待动画跑完后收尾
+            setTimeout(() => {
+                slotOverlay.classList.remove('show');
+                showModal(finalWinner.id); // 弹出详情卡片
+                
+                // 恢复按钮状态
+                isSpinning = false;
+                btn.innerText = "🎰 老虎机抽签";
+                btn.disabled = false;
+            }, 3200); // 比 CSS 动画多等 0.2 秒缓冲，让眼睛看清结果
         }
 
         window.onload = init;
