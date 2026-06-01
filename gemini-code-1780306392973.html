@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>午餐吃什么</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --bg-color: #f7f8fa;
+            --text-main: #333333;
+            --text-sub: #888888;
+            --card-bg: #ffffff;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 80px; }
+
+        /* 顶部一级菜单 */
+        .nav-bar {
+            display: flex;
+            overflow-x: auto;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .nav-bar::-webkit-scrollbar { display: none; }
+        .nav-item {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            margin-right: 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--text-sub);
+            background: var(--bg-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav-item.active {
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* 菜品展示区 */
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+        .food-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .food-card:active { transform: scale(0.97); }
+        .food-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background-color: #e9ecef;
+        }
+        .food-info { padding: 12px; }
+        .food-name { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+
+        /* 底部随机按钮 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0));
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+        .btn-random, .btn-restart {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            cursor: pointer;
+            width: 80%;
+            max-width: 400px;
+            transition: all 0.3s;
+        }
+        .btn-restart {
+            width: auto;
+            max-width: none;
+            margin-top: 20px;
+            padding: 12px 28px;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
+        }
+        .btn-random:disabled {
+            background: #cccccc;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: scale(0.98);
+        }
+
+        /* 普通详情弹窗 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--card-bg); width: 85%; max-width: 320px; border-radius: var(--radius);
+            padding: 24px; position: relative; transform: translateY(20px); transition: transform 0.3s;
+        }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .close-btn { position: absolute; top: 12px; right: 16px; font-size: 24px; color: var(--text-sub); cursor: pointer; }
+        .detail-name { font-size: 22px; font-weight: bold; margin-bottom: 12px; margin-top: 10px; }
+        .detail-item { font-size: 15px; margin-bottom: 8px; color: var(--text-sub); display: flex;}
+        .detail-item strong { color: var(--text-main); width: 50px; flex-shrink: 0;}
+
+        /* 老虎机滚轮样式 */
+        .slot-machine-box {
+            background: var(--card-bg); width: 260px; height: 180px; border-radius: var(--radius);
+            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.show .slot-machine-box { transform: scale(1); }
+        .slot-window { display: flex; flex-direction: column; width: 100%; transform: translateY(0); }
+        .slot-item { height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+        .slot-mask-top, .slot-mask-bottom { position: absolute; left: 0; width: 100%; height: 60px; z-index: 2; pointer-events: none; }
+        .slot-mask-top { top: 0; background: linear-gradient(to bottom, rgba(255,255,255,1) 10%, rgba(255,255,255,0)); }
+        .slot-mask-bottom { bottom: 0; background: linear-gradient(to top, rgba(255,255,255,1) 10%, rgba(255,255,255,0)); }
+        .slot-target-line {
+            position: absolute; top: 60px; left: 0; width: 100%; height: 60px;
+            border-top: 2px solid var(--primary-color); border-bottom: 2px solid var(--primary-color);
+            z-index: 3; pointer-events: none; background: rgba(255, 107, 107, 0.05);
+        }
+
+        /* ✨ 终极抉择弹窗样式 */
+        #finalSelectionModal { z-index: 200; background: rgba(0,0,0,0.85); }
+        #finalSelectionModal .modal-content { max-width: 90%; width: 380px; max-height: 90vh; overflow-y: auto; text-align: center; }
+        .final-title { font-size: 22px; font-weight: bold; margin-bottom: 5px; color: var(--text-main); }
+        .countdown-display { font-size: 16px; color: var(--text-sub); margin-bottom: 15px; }
+        .countdown-text { font-size: 28px; color: var(--primary-color); font-weight: bold; }
+        
+        /* 终极抉择选项卡片 */
+        .final-options-list { display: flex; flex-direction: column; gap: 12px; }
+        .mini-card { 
+            display: flex; text-align: left; background: #fff; border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); cursor: pointer; border: 2px solid transparent; 
+            transition: all 0.2s; overflow: hidden;
+        }
+        .mini-card:active { transform: scale(0.96); }
+        .mini-card:hover { border-color: #ffb8b8; }
+        .mini-card .food-img { width: 90px; height: 90px; border-radius: 0; }
+        .mini-card .food-info { padding: 10px; display: flex; flex-direction: column; justify-content: center; }
+        .mini-card .food-name { font-size: 16px; margin-bottom: 4px; }
+        
+        /* 隐藏彩蛋样式 */
+        .hidden-option-box {
+            padding: 30px 15px; background: #fff4f4; border-radius: var(--radius);
+            border: 2px dashed var(--primary-color); animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { box-shadow: 0 0 10px rgba(255,107,107,0.2); transform: scale(0.98); }
+            to { box-shadow: 0 0 25px rgba(255,107,107,0.6); transform: scale(1.02); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar" id="navBar"></div>
+    <div class="food-grid" id="foodGrid"></div>
+    <div class="bottom-bar">
+        <button class="btn-random" id="randomBtn" onclick="pickRandom()">🎰 老虎机抽签 (剩余3次)</button>
+    </div>
+
+    <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal(event, true)">&times;</span>
+            <div style="font-size: 14px; color: var(--primary-color); font-weight:bold; margin-bottom: 8px;" id="spinResultTitle">第 1 次抽取结果</div>
+            <div class="detail-name" id="modalName">菜品名称</div>
+            <div class="detail-item"><strong>价格:</strong> <span id="modalPrice"></span></div>
+            <div class="detail-item"><strong>门店:</strong> <span id="modalStore"></span></div>
+            <div class="detail-item"><strong>位置:</strong> <span id="modalLocation"></span></div>
+            <div style="margin-top: 20px; text-align: center; color: #888; font-size: 13px;">点击空白处关闭继续抽取</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="slotOverlay">
+        <div class="slot-machine-box">
+            <div class="slot-mask-top"></div>
+            <div class="slot-window" id="slotWindow"></div>
+            <div class="slot-mask-bottom"></div>
+            <div class="slot-target-line"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="finalSelectionModal">
+        <div class="modal-content">
+            <div class="final-title" id="finalTitle">⚔️ 终极对决 ⚔️</div>
+            <div class="countdown-display" id="countdownDisplay">请在 <span class="countdown-text" id="countdownText">8</span> 秒内做出决定</div>
+            
+            <div class="final-options-list" id="finalOptionsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const categories = ["全部", "不要碳水", "米线/粉", "面条", "米饭", "包子饺子"];
+        const dbData = [
+            { id: 1, name: "酸菜肉丝面", category: "面条", store: "永济饺子", price: "¥28.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 2, name: "猪肉/牛肉饺子", category: "包子饺子", store: "永济饺子", price: "¥16.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 3, name: "过油肉盖饭", category: "米饭", store: "永济饺子", price: "¥18.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 4, name: "藤椒鸡拌面", category: "面条", store: "永济饺子", price: "¥18.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 5, name: "三鲜米线", category: "米线/粉", store: "阿香米线", price: "¥12.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 6, name: "鸡腿饭", category: "米饭", store: "阿香米线", price: "¥17.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 7, name: "酸辣粉", category: "米线/粉", store: "阿香米线", price: "¥19.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 8, name: "番茄米线", category: "米线/粉", store: "阿香米线", price: "¥32.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 9, name: "过油肉盖饭", category: "米饭", store: "龙七爷", price: "¥15.90", location: "万达6层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 10, name: "辣椒炒肉/尖椒肉丝", category: "米饭", store: "龙七爷", price: "¥16.50", location: "万达6层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 11, name: "葱爆肉/四季豆炒肉", category: "米饭", store: "龙七爷", price: "¥16.50", location: "万达6层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 12, name: "冒烟辣牛魔王拌面", category: "面条", store: "龙七爷", price: "¥23.90", location: "万达6层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 13, name: "孜然牛肉", category: "米饭", store: "兰州", price: "¥18.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 14, name: "拉面", category: "面条", store: "兰州", price: "¥12.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 15, name: "青椒肉丝", category: "米饭", store: "兰州", price: "¥18.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 16, name: "西红柿鸡蛋拌面", category: "面条", store: "兰州", price: "¥16.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 17, name: "辣皮子鸡丁拌面", category: "面条", store: "秦小妹", price: "¥23.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 18, name: "油泼面", category: "面条", store: "秦小妹", price: "¥23.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 19, name: "广式煲仔饭", category: "米饭", store: "秦小妹", price: "¥26.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 20, name: "爆炒双椒牛肉拌面", category: "面条", store: "秦小妹", price: "¥28.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 21, name: "重庆酸辣粉", category: "米线/粉", store: "秦小妹", price: "¥18.00", location: "万达5层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 22, name: "全菜麻辣烫", category: "不要碳水", store: "西郝李记", price: "¥12.00", location: "1号楼底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 23, name: "夹肉饼", category: "不要碳水", store: "西郝李记", price: "¥7.00", location: "1号楼底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 24, name: "传统面", category: "面条", store: "头道巷", price: "¥15.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 25, name: "茄子面", category: "面条", store: "头道巷", price: "¥15.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 26, name: "清汤面", category: "面条", store: "头道巷", price: "¥15.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 27, name: "肥肠面", category: "面条", store: "头道巷", price: "¥20.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 28, name: "剁椒肉拌面", category: "面条", store: "头道巷", price: "¥15.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 29, name: "牛肉面", category: "面条", store: "头道巷", price: "¥20.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 30, name: "丸子", category: "不要碳水", store: "头道巷", price: "¥3.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 31, name: "三鲜水饺", category: "包子饺子", store: "喜家德", price: "¥28.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 32, name: "鱼片鲜蔬锅", category: "不要碳水", store: "喜家德", price: "¥26.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 33, name: "金汤龙利鱼", category: "不要碳水", store: "喜家德", price: "¥28.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 34, name: "荠菜鲜肉饺", category: "包子饺子", store: "喜家德", price: "¥18.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 35, name: "石锅拌饭", category: "米饭", store: "米村拌饭", price: "¥24.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 36, name: "照烧鸡腿饭", category: "米饭", store: "米村拌饭", price: "¥19.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 37, name: "安格斯肥牛饭", category: "米饭", store: "米村拌饭", price: "¥24.00", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 38, name: "香辣鱿鱼", category: "米饭", store: "米村拌饭", price: "¥29.90", location: "万达4层", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 39, name: "运城羊肉泡", category: "米线/粉", store: "理公梓羊肉馆", price: "¥19.90", location: "北侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 40, name: "羊肉/杂汤", category: "米线/粉", store: "理公梓羊肉馆", price: "¥19.90", location: "北侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 41, name: "羊肉面", category: "米线/粉", store: "理公梓羊肉馆", price: "¥19.90", location: "北侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 42, name: "鲜肉包", category: "包子饺子", store: "包子", price: "¥12.00", location: "南侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 43, name: "韭菜鸡蛋", category: "包子饺子", store: "包子", price: "¥12.00", location: "南侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 44, name: "西葫芦鸡蛋", category: "包子饺子", store: "包子", price: "¥12.00", location: "南侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 45, name: "酱肉包", category: "包子饺子", store: "包子", price: "¥12.00", location: "南侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 46, name: "鸭腿饭", category: "米饭", store: "沙县", price: "¥16.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 47, name: "牛腩饭", category: "米饭", store: "沙县", price: "¥18.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 48, name: "蒸饺", category: "包子饺子", store: "沙县", price: "¥7.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" },
+            { id: 49, name: "青菜肉丝面", category: "面条", store: "沙县", price: "¥11.00", location: "西侧底商", img: "https://placehold.co/300x200/e9ecef/888?text=Pick+Me" }
+        ];
+
+        let currentCategory = "全部";
+        
+        // ✨ 新增系统状态变量
+        let isSpinning = false; 
+        const maxSpins = 3;       // 最大抽取次数
+        let spinCount = 0;        // 当前已抽取次数
+        let spinResults = [];     // 存放每次抽出的菜品数据
+        
+        let finalTimer = null;    // 倒计时计时器
+        let timeLeft = 8;         // 倒计时秒数
+
+        function init() {
+            renderNav();
+            renderFoods();
+        }
+
+        function renderNav() {
+            const navBar = document.getElementById('navBar');
+            navBar.innerHTML = categories.map(cat => 
+                `<div class="nav-item ${cat === currentCategory ? 'active' : ''}" 
+                      onclick="changeCategory('${cat}')">${cat}</div>`
+            ).join('');
+        }
+
+        function changeCategory(cat) {
+            if (isSpinning || spinCount >= maxSpins) return; // 抽奖中或次数用完禁止切换
+            currentCategory = cat;
+            renderNav();
+            renderFoods();
+        }
+
+        function getFilteredData() {
+            if (currentCategory === "全部") return dbData;
+            return dbData.filter(item => item.category === currentCategory);
+        }
+
+        function renderFoods() {
+            const grid = document.getElementById('foodGrid');
+            const data = getFilteredData();
+            
+            if (data.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding: 40px;">当前分类暂无菜品</div>';
+                return;
+            }
+            grid.innerHTML = data.map(item => `
+                <div class="food-card" onclick="showModal(${item.id})">
+                    <img src="${item.img}" alt="${item.name}" class="food-img" loading="lazy">
+                    <div class="food-info">
+                        <div class="food-name">${item.name}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showModal(id, titleText = null) {
+            const item = dbData.find(d => d.id === id);
+            if (!item) return;
+
+            // 显示是第几次抽签
+            const titleEl = document.getElementById('spinResultTitle');
+            if(titleText) {
+                titleEl.innerText = titleText;
+                titleEl.style.display = "block";
+            } else {
+                titleEl.style.display = "none";
+            }
+
+            document.getElementById('modalName').innerText = item.name;
+            document.getElementById('modalPrice').innerText = item.price;
+            document.getElementById('modalStore').innerText = item.store;
+            document.getElementById('modalLocation').innerText = item.location;
+            
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        function closeModal(event, force = false) {
+            if (force || event.target.id === 'detailModal') {
+                document.getElementById('detailModal').classList.remove('show');
+                
+                // 如果刚好关掉的是第3次抽签的弹窗，立刻触发终极抉择
+                if (spinCount >= maxSpins) {
+                    setTimeout(() => { showFinalSelection(); }, 300);
+                }
+            }
+        }
+
+        // 老虎机算法
+        function pickRandom() {
+            if (isSpinning) return;
+            if (spinCount >= maxSpins) {
+                alert("你已经抽取3次啦！无法再重抽。");
+                showFinalSelection();
+                return;
+            }
+
+            const currentData = getFilteredData();
+            if (currentData.length === 0) {
+                alert("当前分类下没有可以随机的菜品哦！");
+                return;
+            }
+
+            isSpinning = true;
+            const btn = document.getElementById('randomBtn');
+            btn.innerText = "🎰 正在摇号中...";
+            btn.disabled = true;
+
+            const slotOverlay = document.getElementById('slotOverlay');
+            const slotWindow = document.getElementById('slotWindow');
+
+            const spinRounds = 4;
+            let rollData = [{ name: "等待命运降临..." }];
+            
+            for (let i = 0; i < spinRounds; i++) {
+                rollData = rollData.concat(currentData);
+            }
+            
+            const winnerIndex = Math.floor(Math.random() * currentData.length);
+            const finalWinner = currentData[winnerIndex];
+            
+            for (let i = 0; i <= winnerIndex; i++) {
+                rollData.push(currentData[i]);
+            }
+            rollData.push({ name: "" });
+
+            slotWindow.innerHTML = rollData.map(item => `<div class="slot-item">${item.name}</div>`).join('');
+            slotWindow.style.transition = 'none';
+            slotWindow.style.transform = `translateY(0px)`;
+            
+            slotOverlay.classList.add('show');
+            slotWindow.offsetHeight; // 强制渲染
+
+            const targetIndex = 1 + spinRounds * currentData.length + winnerIndex;
+            const targetY = - (targetIndex - 1) * 60;
+
+            slotWindow.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1)';
+            slotWindow.style.transform = `translateY(${targetY}px)`;
+
+            // 动画结束
+            setTimeout(() => {
+                slotOverlay.classList.remove('show');
+                
+                // ✨ 将本次结果保存进数组，并增加计数
+                spinResults.push(finalWinner);
+                spinCount++;
+                
+                // 弹出单次结果
+                showModal(finalWinner.id, `第 ${spinCount} 次抽取结果`);
+                
+                // 恢复按钮并更新剩余次数
+                isSpinning = false;
+                if (spinCount < maxSpins) {
+                    btn.innerText = `🎰 老虎机抽签 (剩余${maxSpins - spinCount}次)`;
+                    btn.disabled = false;
+                } else {
+                    btn.innerText = `🛑 次数已用完`;
+                    btn.style.background = "#cccccc";
+                }
+            }, 3200);
+        }
+
+        // ✨ 触发终极抉择阶段
+        function showFinalSelection() {
+            // 如果已经显示了，就不重复执行
+            if(document.getElementById('finalSelectionModal').classList.contains('show')) return;
+            
+            document.getElementById('finalSelectionModal').classList.add('show');
+            
+            const container = document.getElementById('finalOptionsContainer');
+            // 将3次结果渲染成列表
+            container.innerHTML = spinResults.map((item, index) => `
+                <div class="mini-card" onclick="makeFinalChoice(${index})">
+                    <img src="${item.img}" class="food-img">
+                    <div class="food-info">
+                        <div class="food-name">${item.name}</div>
+                        <div style="font-size:12px; color:#888;">${item.store} | ${item.price}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // 初始化倒计时
+            timeLeft = 8;
+            document.getElementById('countdownText').innerText = timeLeft;
+            document.getElementById('finalTitle').innerText = "⚔️ 终极对决 ⚔️";
+            document.getElementById('countdownDisplay').style.display = 'block';
+
+            // 开始8秒计时器
+            finalTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    document.getElementById('countdownText').innerText = timeLeft;
+                } else {
+                    // 超时未选
+                    clearInterval(finalTimer);
+                    unlockHiddenOption();
+                }
+            }, 1000);
+        }
+
+        // ✨ 用户做出了最终选择
+        function makeFinalChoice(index) {
+            if (timeLeft <= 0) return; // 超时就不让点了
+            
+            clearInterval(finalTimer); // 停止倒计时
+            const chosen = spinResults[index];
+            
+            // 更新 UI
+            document.getElementById('finalTitle').innerText = "✅ 最终决定就是它了！";
+            document.getElementById('countdownDisplay').style.display = 'none';
+
+            // 清空列表，只展示那一个大卡片
+            const container = document.getElementById('finalOptionsContainer');
+            container.innerHTML = `
+                <div class="mini-card" style="transform: scale(1.05); margin: 20px auto; border-color: var(--primary-color); cursor: default;">
+                    <img src="${chosen.img}" class="food-img" style="width: 110px; height: 110px;">
+                    <div class="food-info" style="padding: 15px;">
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">${chosen.name}</div>
+                        <div style="font-size: 14px; color: var(--text-sub); margin-bottom: 4px;">${chosen.store} | ${chosen.price}</div>
+                        <div style="font-size: 12px; color: #aaa;">${chosen.location}</div>
+                    </div>
+                </div>
+                <div style="margin-top:20px; color:#888; font-size:14px;">祝你用餐愉快！</div>
+                <button class="btn-restart" onclick="resetApp()">再来一轮</button>
+            `;
+        }
+
+        // ✨ 超时触发彩蛋
+        function unlockHiddenOption() {
+            document.getElementById('finalTitle').innerText = "✨ 隐藏选项解锁 ✨";
+            document.getElementById('countdownDisplay').style.display = 'none';
+            
+            const container = document.getElementById('finalOptionsContainer');
+            container.innerHTML = `
+                <div class="hidden-option-box">
+                    <div style="font-size: 55px; margin-bottom: 10px;">🦀</div>
+                    <div style="font-size: 26px; font-weight: bold; color: var(--primary-color); margin-bottom: 10px;">249 海鲜自助</div>
+                    <div style="font-size: 14px; color: #666; line-height:1.5;">
+                        既然给了你3次机会你都犹豫不决...<br>那就不要选了，对自己好一点！
+                    </div>
+                </div>
+                <div style="margin-top:20px; color:#888; font-size:14px;">老板，买单！</div>
+                <button class="btn-restart" onclick="resetApp()">再来一轮</button>
+            `;
+        }
+
+        function resetApp() {
+            if (finalTimer) {
+                clearInterval(finalTimer);
+                finalTimer = null;
+            }
+
+            isSpinning = false;
+            spinCount = 0;
+            spinResults = [];
+            timeLeft = 8;
+
+            document.getElementById('detailModal').classList.remove('show');
+            document.getElementById('slotOverlay').classList.remove('show');
+            document.getElementById('finalSelectionModal').classList.remove('show');
+            document.getElementById('finalOptionsContainer').innerHTML = '';
+            document.getElementById('countdownText').innerText = timeLeft;
+            document.getElementById('finalTitle').innerText = "⚔️ 终极对决 ⚔️";
+            document.getElementById('countdownDisplay').style.display = 'block';
+
+            const btn = document.getElementById('randomBtn');
+            btn.innerText = `🎰 老虎机抽签 (剩余${maxSpins}次)`;
+            btn.disabled = false;
+            btn.style.background = '';
+
+            renderNav();
+            renderFoods();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
